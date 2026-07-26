@@ -17,7 +17,9 @@ public class GlobalCorsConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost", "http://localhost:80",
-                "http://localhost:5173", "http://localhost:5174", "http://localhost:5175"));
+                "http://localhost:5173", "http://localhost:5174", "http://localhost:5175",
+                "https://*.trycloudflare.com", "https://*.duckdns.org",
+                "https://clp7432.duckdns.org", "http://clp7432.duckdns.org"));
         config.setAllowedMethods(Arrays.asList(
                 HttpMethod.GET.name(), HttpMethod.POST.name(),
                 HttpMethod.PUT.name(), HttpMethod.DELETE.name(),

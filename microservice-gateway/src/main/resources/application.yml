@@ -21,6 +21,12 @@ spring:
               - "http://localhost:5173"
               - "http://localhost:5174"
               - "http://localhost:5175"
+              - "https://marcocarrasco.org"
+              - "http://marcocarrasco.org"
+              - "https://*.trycloudflare.com"
+              - "https://*.duckdns.org"
+              - "https://clp7432.duckdns.org"
+              - "http://clp7432.duckdns.org"
             allowedMethods:
               - "*"
             allowedHeaders:

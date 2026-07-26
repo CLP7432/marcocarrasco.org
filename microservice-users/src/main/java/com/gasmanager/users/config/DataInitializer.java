@@ -56,7 +56,7 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("========================================");
         System.out.println("USUARIO ADMINISTRADOR CREADO");
         System.out.println("Correo: admin@gasmanager.com");
-        System.out.println("Contrasena: Admin123");
+        System.out.println("Cambia la contraseña desde el panel de administración");
         System.out.println("========================================");
     }
 
@@ -114,7 +114,11 @@ public class DataInitializer implements CommandLineRunner {
         Usuario admin = new Usuario();
         admin.setNombre("Administrador del Sistema");
         admin.setCorreo("admin@gasmanager.com");
-        admin.setPassword(passwordEncoder.encode("Admin123"));
+        String adminPassword = System.getenv("ADMIN_INITIAL_PASSWORD");
+        if (adminPassword == null || adminPassword.isBlank()) {
+            adminPassword = "Cambiami123!";
+        }
+        admin.setPassword(passwordEncoder.encode(adminPassword));
         admin.setRol(adminRol);
         admin.setEstado(EstadoUsuario.ACTIVO);
         admin.setActivo(true);
