@@ -72,10 +72,10 @@ const Login = () => {
                     </button>
                 </form>
 
-                <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: '#666' }}>
-                    <p>Usuario admin: admin@gasmanager.com</p>
-                    <p>Contraseña: Admin123</p>
-                </div>
+                {/*<div style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: '#666' }}>*/}
+                {/*    <p>Usuario admin: admin@gasmanager.com</p>*/}
+                {/*    <p>Contraseña: Admin123</p>*/}
+                {/*</div>*/}
             </div>
         </div>
     );
