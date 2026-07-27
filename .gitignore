@@ -6,3 +6,7 @@ target/
 node_modules/
 dist/
 build/
+
+# Tutoriales personales (no subir a git)
+TUTORIAL-*.md
+DEPLOY-GUIDE.md
