@@ -58,21 +58,15 @@ const CorteTurnoForm = () => {
             const response = await fetch('/api/empleados/despachadores');
             if (response.ok) {
                 const data = await response.json();
-                setDespachadores(data);
+                setDespachadores(Array.isArray(data) ? data : []);
                 console.log('Despachadores cargados:', data);
             } else {
-                console.warn('No se pudieron cargar despachadores, usando datos de prueba');
-                setDespachadores([
-                    { id: 1, nombre: 'Juan', apellidoPaterno: 'Pérez', apellidoMaterno: 'García', activo: true },
-                    { id: 2, nombre: 'María', apellidoPaterno: 'López', apellidoMaterno: 'Martínez', activo: true },
-                ]);
+                console.warn('No se pudieron cargar despachadores');
+                setDespachadores([]);
             }
         } catch (error) {
             console.error('Error cargando despachadores:', error);
-            setDespachadores([
-                { id: 1, nombre: 'Juan', apellidoPaterno: 'Pérez', apellidoMaterno: 'García', activo: true },
-                { id: 2, nombre: 'María', apellidoPaterno: 'López', apellidoMaterno: 'Martínez', activo: true },
-            ]);
+            setDespachadores([]);
         }
     };
 
@@ -297,14 +291,17 @@ const CorteTurnoForm = () => {
             return;
         }
         setDispensarioSeleccionado(dispensario);
-        // Auto-seleccionar el primer despachador disponible
-        if (despachadores.length > 0) {
-            const despachadorActivo = despachadores.find(d => d.activo === true);
-            if (despachadorActivo) {
-                setDespachadorSeleccionado(despachadorActivo.id.toString());
+        // Preseleccionar el despachador persistido que atendio la isla (si existe).
+        // Si el dispensario no tiene despachador, el supervisor debe asignarlo.
+        if (dispensario.despachadorId) {
+            const persistido = despachadores.find(d => String(d.id) === String(dispensario.despachadorId));
+            if (persistido) {
+                setDespachadorSeleccionado(String(persistido.id));
             } else {
-                setDespachadorSeleccionado(despachadores[0].id.toString());
+                setDespachadorSeleccionado('');
             }
+        } else {
+            setDespachadorSeleccionado('');
         }
     };
 

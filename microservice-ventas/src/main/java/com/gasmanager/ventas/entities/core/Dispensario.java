@@ -74,6 +74,12 @@ public class Dispensario {
     @Column(name = "tiene_dos_caras")
     private Boolean tieneDosCaras = true;
 
+    @Column(name = "despachador_id")
+    private Long despachadorId;
+
+    @Column(name = "despachador_nombre", length = 100)
+    private String despachadorNombre;
+
     public void addCara(CaraDispensario cara) {
         caras.add(cara);
         cara.setDispensario(this);

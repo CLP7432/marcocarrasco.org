@@ -338,7 +338,9 @@ const PuntoVenta = () => {
                         id: d.id,
                         nombre: d.nombre || 'Dispensario ' + d.id,
                         numero: d.numero || '',
-                        mangueras: manguerasDelDispensario
+                        mangueras: manguerasDelDispensario,
+                        despachadorId: d.despachadorId || null,
+                        despachadorNombre: d.despachadorNombre || null
                     };
                 }
             });
@@ -346,6 +348,32 @@ const PuntoVenta = () => {
             const dispensariosArray = Object.values(dispensariosMap);
             setDispensarios(dispensariosArray);
             setMangueras(todasLasMangueras);
+
+            // El despachador asignado a cada isla NACE del backend (fuente de verdad).
+            // Si el despachador viene persistido, lo aplicamos; si no, queda pendiente.
+            const mapaInicial = {};
+            const saved = localStorage.getItem('despachadoresPorIsla');
+            const savedMap = saved ? (() => { try { return JSON.parse(saved); } catch(e) { return {}; } })() : {};
+            dispensariosArray.forEach(disp => {
+                if (disp.despachadorId) {
+                    const d = despachadores.find(x => x.id === disp.despachadorId);
+                    if (d) {
+                        mapaInicial[disp.id] = d;
+                    } else {
+                        mapaInicial[disp.id] = { id: disp.despachadorId, nombre: '', apellidoPaterno: '' };
+                    }
+                }
+            });
+            // Si habia una asignacion local mas reciente que no esta en BD, la preservamos solo si la BD no manda nada
+            setDespachadorPorIsla(prevDespachadorPorIsla => {
+                const combinado = { ...mapaInicial };
+                Object.keys(prevDespachadorPorIsla || {}).forEach(dispId => {
+                    if (!combinado[dispId] && savedMap[dispId]) {
+                        combinado[dispId] = savedMap[dispId];
+                    }
+                });
+                return combinado;
+            });
 
             console.log('🏗️ Dispensarios procesados:', dispensariosArray.length);
             console.log('📊 Total mangueras:', todasLasMangueras.length);
@@ -404,6 +432,10 @@ const PuntoVenta = () => {
         const tipoProducto = mapearTipoProducto(ventaData.tipoCombustible);
 
         const despachadorIsla = despachadorPorIsla[ventaData.dispensarioId] || null;
+        if (!despachadorIsla) {
+            alert('⚠️ No se puede registrar la venta sin un despachador asignado a la isla.');
+            return false;
+        }
 
         const ventaCompleta = {
             turnoId: turnoActivo.id,
@@ -413,8 +445,8 @@ const PuntoVenta = () => {
             total: parseFloat(total.toFixed(2)),
             surtidorId: ventaData.surtidorId,
             surtidorNumero: ventaData.surtidorNumero || '01',
-            despachadorId: despachadorIsla?.id || 1,
-            despachadorNombre: despachadorIsla ? despachadorIsla.nombre + ' ' + despachadorIsla.apellidoPaterno : 'SISTEMA',
+            despachadorId: despachadorIsla.id,
+            despachadorNombre: despachadorIsla.nombre + ' ' + despachadorIsla.apellidoPaterno,
             dispensarioId: ventaData.dispensarioId,
             dispensarioNombre: ventaData.dispensarioNombre,
             detalles: [{
@@ -451,14 +483,29 @@ const PuntoVenta = () => {
         }
     };
 
-    // ===== GUARDAR DESPACHADOR POR ISLA =====
-    const handleDespachadorChange = (dispensarioId, despachadorId) => {
+    // ===== GUARDAR DESPACHADOR POR ISLA (persistido en BD) =====
+    const handleDespachadorChange = async (dispensarioId, despachadorId) => {
         const despachador = despachadores.find(d => d.id === parseInt(despachadorId));
         if (despachador) {
             const nuevos = { ...despachadorPorIsla, [dispensarioId]: despachador };
             setDespachadorPorIsla(nuevos);
             localStorage.setItem('despachadoresPorIsla', JSON.stringify(nuevos));
             console.log('Despachador asignado a isla:', despachador);
+
+            // Persistir en el backend (referencia de cortes de turno por despachador)
+            try {
+                await fetch(`/api/dispensarios/${dispensarioId}/despachador`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        despachadorId: despachador.id,
+                        despachadorNombre: despachador.nombre + ' ' + (despachador.apellidoPaterno || '')
+                    })
+                });
+                console.log('✅ Despachador persistido en BD para dispensario', dispensarioId);
+            } catch (error) {
+                console.error('❌ Error persistiendo despachador:', error);
+            }
         }
     };
 
@@ -562,9 +609,16 @@ const PuntoVenta = () => {
         const m = mangueras.find(m => m.id === id);
         if (!m) return;
 
+        const despachadorIsla = despachadorPorIsla[m.dispensarioId] || null;
+        if (!despachadorIsla) {
+            alert('⚠️ No se puede INICIAR el dispensario sin un despachador asignado. Seleccione el despachador que atiende esta isla antes de vender.');
+            return;
+        }
+
         console.log('🔍 Manguera m:', m);
         console.log('🔍 dispensarioId:', m.dispensarioId);
         console.log('🔍 dispensarioNombre:', m.dispensarioNombre);
+        console.log('🔍 despachador asignado:', despachadorIsla);
 
         const cantidad = parseFloat(cantidadInput[id]);
         if (isNaN(cantidad) || cantidad <= 0) {
@@ -833,6 +887,12 @@ const PuntoVenta = () => {
                                                         </option>
                                                     ))}
                                             </select>
+                                            {despachadores.filter(d => d.activo === true).length === 0 && (
+                                                <small className="text-danger d-block mt-1">
+                                                    No hay despachadores. 
+                                                    <a href="/empleados/nuevo" className="text-danger fw-bold"> Crear despachador</a> (empleado con puesto "Despachador").
+                                                </small>
+                                            )}
                                         </div>
                                         <div className="col-md-6">
                                             <small className="text-muted">
@@ -913,8 +973,8 @@ const PuntoVenta = () => {
 
                                                         <div className="mb-2">{getEstadoBadge(carga.estado)}</div>
 
-                                                        <button className={`btn w-100 ${carga.estado === 'DISPONIBLE' ? 'btn-success' : carga.estado === 'EN_CURSO' ? 'btn-danger' : 'btn-secondary'}`} disabled={carga.estado !== 'DISPONIBLE' && carga.estado !== 'EN_CURSO'} onClick={() => carga.estado === 'DISPONIBLE' ? iniciarCarga(m.id) : detenerCarga(m.id)}>
-                                                            {carga.estado === 'DISPONIBLE' ? '▶ INICIAR' : carga.estado === 'EN_CURSO' ? '⏹ DETENER' : '✅ COMPLETADA'}
+                                                        <button className={`btn w-100 ${carga.estado === 'DISPONIBLE' ? 'btn-success' : carga.estado === 'EN_CURSO' ? 'btn-danger' : 'btn-secondary'}`} disabled={!despachadorIsla || (carga.estado !== 'DISPONIBLE' && carga.estado !== 'EN_CURSO')} onClick={() => carga.estado === 'DISPONIBLE' ? iniciarCarga(m.id) : detenerCarga(m.id)}>
+                                                            {carga.estado === 'DISPONIBLE' ? (despachadorIsla ? '▶ INICIAR' : '🔒 Asignar despachador') : carga.estado === 'EN_CURSO' ? '⏹ DETENER' : '✅ COMPLETADA'}
                                                         </button>
                                                     </div>
                                                 </div>

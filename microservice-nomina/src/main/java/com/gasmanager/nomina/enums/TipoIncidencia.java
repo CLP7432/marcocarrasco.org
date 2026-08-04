@@ -10,5 +10,6 @@ public enum TipoIncidencia {
     PERMISO_SIN_GOCE,
     VACACION,
     AGUINALDO,
-    PRIMA_VACACIONAL
+    PRIMA_VACACIONAL,
+    FALTANTE
 }

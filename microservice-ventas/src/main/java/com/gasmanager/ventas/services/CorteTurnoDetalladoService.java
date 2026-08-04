@@ -1,6 +1,7 @@
 package com.gasmanager.ventas.services;
 
 import com.gasmanager.ventas.clients.InventarioClient;
+import com.gasmanager.ventas.clients.NominaClient;
 import com.gasmanager.ventas.dto.*;
 import com.gasmanager.ventas.entities.core.*;
 import com.gasmanager.ventas.enums.EstadoCorteEnum;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -27,6 +29,7 @@ public class CorteTurnoDetalladoService {
     private final LecturaFinalTurnoRepository lecturaFinalRepository;
     private final LecturaBaseRepository lecturaBaseRepository;
     private final InventarioClient inventarioClient;
+    private final NominaClient nominaClient;
     private final MangueraRepository mangueraRepository;
     private final VentaRepository ventaRepository;
     private final DispensarioRepository dispensarioRepository;
@@ -233,6 +236,8 @@ public class CorteTurnoDetalladoService {
             info.put("mangueras", manguerasInfo);
             info.put("ventasCount", ventasCount);
             info.put("totalVentas", totalVentas);
+            info.put("despachadorId", d.getDespachadorId());
+            info.put("despachadorNombre", d.getDespachadorNombre());
 
             resultado.add(info);
             log.info("Dispensario {}: {} mangueras, {} ventas, tieneCorte: {}",
@@ -556,6 +561,29 @@ public class CorteTurnoDetalladoService {
         corte.setDiferencia(diferencia);
 
         corte = corteTurnoRepository.save(corte);
+
+        // Si el despachador reporto MENOS efectivo del que debe entregar (faltante),
+        // se registra automaticamente un descuento (FALTANTE) en nomina del despachador.
+        if (diferencia.compareTo(BigDecimal.ZERO) < 0 && request.getDespachadorId() != null) {
+            BigDecimal montoFaltante = diferencia.abs();
+            log.warn("FALTANTE detectado en corte {}: ${} para despachador {}",
+                    corte.getCodigoCorte(), montoFaltante, request.getDespachadorId());
+            try {
+                nominaClient.registrarIncidencia(IncidenciaFaltanteDTO.builder()
+                        .empleadoId(request.getDespachadorId())
+                        .tipo("FALTANTE")
+                        .fecha(LocalDate.now())
+                        .cantidad(BigDecimal.ONE)
+                        .monto(montoFaltante)
+                        .observaciones("Faltante en corte " + corte.getCodigoCorte() +
+                                " del dispensario " + request.getDispensarioNombre())
+                        .autorizadoPor("AUTOMATICO")
+                        .build());
+                log.info("Descuento FALTANTE de ${} registrado en nomina", montoFaltante);
+            } catch (Exception e) {
+                log.error("No se pudo registrar el descuento FALTANTE en nomina: {}", e.getMessage());
+            }
+        }
 
         for (LecturaFinalDTO lecturaFinal : lecturasFinalesCalculadas) {
             LecturaFinalTurno lectura = LecturaFinalTurno.builder()

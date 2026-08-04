@@ -75,6 +75,7 @@ const IncidenciaList = () => {
             HORA_EXTRA_DOBLE: 'bg-info',
             HORA_EXTRA_TRIPLE: 'bg-primary',
             BONO: 'bg-success',
+            FALTANTE: 'bg-danger',
             PERMISO_CON_GOCE: 'bg-secondary',
             PERMISO_SIN_GOCE: 'bg-secondary',
             VACACION: 'bg-secondary'
@@ -85,6 +86,7 @@ const IncidenciaList = () => {
             HORA_EXTRA_DOBLE: 'Hora Extra (Doble)',
             HORA_EXTRA_TRIPLE: 'Hora Extra (Triple)',
             BONO: 'Bono',
+            FALTANTE: 'Faltante',
             PERMISO_CON_GOCE: 'Permiso con goce',
             PERMISO_SIN_GOCE: 'Permiso sin goce',
             VACACION: 'Vacación'
@@ -143,6 +145,7 @@ const IncidenciaList = () => {
                                 <option value="HORA_EXTRA_DOBLE">Hora Extra (Doble)</option>
                                 <option value="HORA_EXTRA_TRIPLE">Hora Extra (Triple)</option>
                                 <option value="BONO">Bono</option>
+                                <option value="FALTANTE">Faltante</option>
                                 <option value="PERMISO_CON_GOCE">Permiso con goce</option>
                                 <option value="PERMISO_SIN_GOCE">Permiso sin goce</option>
                                 <option value="VACACION">Vacación</option>

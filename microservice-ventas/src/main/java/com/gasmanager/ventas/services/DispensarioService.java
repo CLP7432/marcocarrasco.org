@@ -341,6 +341,22 @@ public class DispensarioService {
     }
 
     @Transactional
+    public Dispensario asignarDespachador(Long id, Long despachadorId, String despachadorNombre) {
+        Dispensario dispensario = dispensarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Dispensario no encontrado con ID: " + id));
+
+        if (despachadorId == null) {
+            dispensario.setDespachadorId(null);
+            dispensario.setDespachadorNombre(null);
+        } else {
+            dispensario.setDespachadorId(despachadorId);
+            dispensario.setDespachadorNombre(despachadorNombre);
+        }
+
+        return dispensarioRepository.save(dispensario);
+    }
+
+    @Transactional
     public Dispensario cambiarEstadoMantenimiento(Long id) {
         Dispensario dispensario = dispensarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Dispensario no encontrado con ID: " + id));

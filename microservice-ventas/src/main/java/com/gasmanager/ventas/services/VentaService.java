@@ -51,18 +51,8 @@ public class VentaService {
         }
 
         if (turnoAsignado == null) {
-            turnoAsignado = Turno.builder()
-                    .codigoTurno("TURNO-DEF-" + System.currentTimeMillis())
-                    .nombre("Turno Por Defecto")
-                    .fechaTurno(LocalDateTime.now())
-                    .horaInicio(LocalTime.now())
-                    .estado(EstadoTurno.ABIERTO)
-                    .supervisorId(1L)
-                    .supervisorNombre("SISTEMA")
-                    .numeroVentas(0)
-                    .numeroClientes(0)
-                    .build();
-            turnoAsignado = turnoRepository.save(turnoAsignado);
+            throw new IllegalStateException(
+                    "No hay un turno activo. El supervisor debe abrir un turno antes de vender.");
         }
 
         venta.setTurno(turnoAsignado);

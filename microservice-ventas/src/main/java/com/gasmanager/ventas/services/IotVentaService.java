@@ -39,6 +39,11 @@ public class IotVentaService {
         log.info("Despachador: {} ({})", request.getDespachadorId(), request.getDespachadorNombre());
         log.info("Litros: {}, Total: {}", request.getLitros(), request.getTotal());
 
+        if (request.getDespachadorId() == null || request.getDespachadorNombre() == null) {
+            throw new IllegalArgumentException(
+                    "No se puede completar la carga sin un despachador asignado al dispensario.");
+        }
+
         List<Turno> turnosActivos = turnoRepository.findByEstado(EstadoTurno.ABIERTO);
         if (turnosActivos.isEmpty()) {
             throw new IllegalStateException("No hay un turno activo. El supervisor debe abrir un turno.");
@@ -46,8 +51,10 @@ public class IotVentaService {
         Turno turno = turnosActivos.get(0);
         log.info("Turno activo: {}", turno.getCodigoTurno());
 
-        BigDecimal precio = request.getPrecioUnitario() != null ?
-                request.getPrecioUnitario() : new BigDecimal("24.00");
+        if (request.getPrecioUnitario() == null) {
+            throw new IllegalArgumentException("No se puede completar la carga sin un precio unitario.");
+        }
+        BigDecimal precio = request.getPrecioUnitario();
 
         BigDecimal total = request.getTotal() != null ?
                 request.getTotal() : request.getLitros().multiply(precio);
@@ -56,9 +63,8 @@ public class IotVentaService {
         venta.setTurno(turno);
         venta.setMetodoPago(MetodoPagoEnum.EFECTIVO);
         venta.setEstado(EstadoVenta.COMPLETADA);
-        venta.setDespachadorId(request.getDespachadorId() != null ? request.getDespachadorId() : 1L);
-        venta.setDespachadorNombre(request.getDespachadorNombre() != null ?
-                request.getDespachadorNombre() : "IoT-SISTEMA");
+        venta.setDespachadorId(request.getDespachadorId());
+        venta.setDespachadorNombre(request.getDespachadorNombre());
         venta.setFechaHora(LocalDateTime.now());
         venta.setTotal(total);
         venta.setSubtotal(total.divide(new BigDecimal("1.16"), 2, RoundingMode.HALF_UP));

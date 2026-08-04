@@ -150,6 +150,7 @@ public class NominaService {
         BigDecimal faltas = BigDecimal.ZERO;
         BigDecimal faltasDescuento = BigDecimal.ZERO;
         BigDecimal bonos = BigDecimal.ZERO;
+        BigDecimal descuentosFaltante = BigDecimal.ZERO;
 
         for (Incidencia inc : incidencias) {
             switch (inc.getTipo()) {
@@ -164,6 +165,10 @@ public class NominaService {
                 case FALTA:
                     faltas = faltas.add(inc.getCantidad());
                     faltasDescuento = faltasDescuento.add(salarioDiario.multiply(inc.getCantidad()));
+                    break;
+                case FALTANTE:
+                    // Faltante de efectivo/inventario detectado en el corte: se descuenta al despachador.
+                    descuentosFaltante = descuentosFaltante.add(inc.getMonto() != null ? inc.getMonto() : BigDecimal.ZERO);
                     break;
                 case BONO:
                     bonos = bonos.add(inc.getMonto() != null ? inc.getMonto() : BigDecimal.ZERO);
@@ -186,10 +191,14 @@ public class NominaService {
         BigDecimal seguroSocial = totalGravado.multiply(seguroSocialPorcentaje.divide(new BigDecimal("100")));
         BigDecimal infonavit = totalGravado.multiply(infonavitPorcentaje.divide(new BigDecimal("100")));
         BigDecimal cuotaSindical = totalGravado.multiply(cuotaSindicalPorcentaje.divide(new BigDecimal("100")));
-        BigDecimal totalDeducciones = isr.add(seguroSocial).add(infonavit).add(cuotaSindical);
+        BigDecimal otrasDeducciones = descuentosFaltante;
+        BigDecimal totalDeducciones = isr.add(seguroSocial).add(infonavit).add(cuotaSindical).add(otrasDeducciones);
 
         // Neto a pagar
         BigDecimal netoPagar = totalGravado.subtract(totalDeducciones);
+        if (netoPagar.compareTo(BigDecimal.ZERO) < 0) {
+            netoPagar = BigDecimal.ZERO;
+        }
 
         return NominaDetalle.builder()
                 .empleado(empleado)
@@ -205,6 +214,7 @@ public class NominaService {
                 .cuotaSindical(cuotaSindical)
                 .seguroSocial(seguroSocial)
                 .infonavit(infonavit)
+                .otrasDeducciones(otrasDeducciones)
                 .totalDeducciones(totalDeducciones)
                 .netoPagar(netoPagar)
                 .build();

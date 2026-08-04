@@ -92,7 +92,7 @@ const IncidenciaForm = () => {
     };
 
     const tipoRequiereCantidad = ['FALTA', 'RETARDO', 'HORA_EXTRA_DOBLE', 'HORA_EXTRA_TRIPLE', 'VACACION'].includes(formData.tipo);
-    const tipoRequiereMonto = ['BONO'].includes(formData.tipo);
+    const tipoRequiereMonto = ['BONO', 'FALTANTE'].includes(formData.tipo);
 
     return (
         <div className="container">
@@ -132,6 +132,7 @@ const IncidenciaForm = () => {
                             <option value="HORA_EXTRA_DOBLE">Hora Extra (Doble)</option>
                             <option value="HORA_EXTRA_TRIPLE">Hora Extra (Triple)</option>
                             <option value="BONO">Bono</option>
+                            <option value="FALTANTE">Faltante (descuento)</option>
                             <option value="PERMISO_CON_GOCE">Permiso con goce de sueldo</option>
                             <option value="PERMISO_SIN_GOCE">Permiso sin goce de sueldo</option>
                             <option value="VACACION">Vacación</option>

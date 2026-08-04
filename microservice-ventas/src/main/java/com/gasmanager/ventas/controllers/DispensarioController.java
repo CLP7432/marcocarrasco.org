@@ -191,6 +191,21 @@ public class DispensarioController {
         }
     }
 
+    @PutMapping("/{id}/despachador")
+    public ResponseEntity<Dispensario> asignarDespachador(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
+        try {
+            Long despachadorId = body.get("despachadorId") != null
+                    ? Long.valueOf(body.get("despachadorId").toString()) : null;
+            String despachadorNombre = (String) body.get("despachadorNombre");
+            Dispensario actualizado = dispensarioService.asignarDespachador(id, despachadorId, despachadorNombre);
+            return ResponseEntity.ok(actualizado);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping("/activos-para-venta")
     public ResponseEntity<List<Dispensario>> listarDispensariosActivosParaVenta() {
         List<Dispensario> todos = dispensarioService.listarDispensariosCompletos();
