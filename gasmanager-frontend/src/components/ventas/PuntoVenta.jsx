@@ -299,7 +299,10 @@ const PuntoVenta = () => {
                                 if (!m.activo) return;
                                 if (!m.tipoCombustible) return;
 
-                                const precio = preciosMap[m.tipoCombustible] || 24.00;
+                                // Solo se muestra si el combustible existe en el catalogo.
+                                // Si no hay combustible dado de alta, la manguera no se muestra.
+                                const precio = preciosMap[m.tipoCombustible];
+                                if (precio == null) return;
 
                                 let nombreCombustible = m.tipoCombustible;
                                 if (m.tipoCombustible === 'MAGNA') nombreCombustible = 'Magna';

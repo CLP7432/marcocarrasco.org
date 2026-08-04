@@ -1,6 +1,10 @@
 package com.gasmanager.ventas.services;
 
 import com.gasmanager.ventas.repositories.*;
+import com.gasmanager.ventas.repositories.CaraDispensarioRepository;
+import com.gasmanager.ventas.repositories.DispensarioRepository;
+import com.gasmanager.ventas.repositories.MangueraRepository;
+import com.gasmanager.ventas.clients.InventarioClient;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +25,10 @@ public class LimpiezaService {
     private final LecturaFinalTurnoRepository lecturaFinalRepository;
     private final NotaCreditoCorteRepository notaCreditoCorteRepository;
     private final DetalleAceiteCorteRepository detalleAceiteCorteRepository;
+    private final MangueraRepository mangueraRepository;
+    private final CaraDispensarioRepository caraDispensarioRepository;
+    private final DispensarioRepository dispensarioRepository;
+    private final InventarioClient inventarioClient;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -69,12 +77,32 @@ public class LimpiezaService {
         turnoRepository.deleteAll();
         turnoRepository.flush();
 
-        // 9. Resetear contadores de IDs
+        // 9. Eliminar mangueras (hijo de cara) -> caras (hijo de dispensario) -> dispensarios
+        log.info("Eliminando mangueras...");
+        mangueraRepository.deleteAll();
+        mangueraRepository.flush();
+        log.info("Eliminando caras de dispensario...");
+        caraDispensarioRepository.deleteAll();
+        caraDispensarioRepository.flush();
+        log.info("Eliminando dispensarios...");
+        dispensarioRepository.deleteAll();
+        dispensarioRepository.flush();
+
+        // 10. Resetear contadores de IDs
         log.info("Reseteando contadores de IDs...");
         resetearSecuencias();
 
+        // 11. Limpiar catalogo de combustibles y tanques (microservice-inventarios)
+        try {
+            log.info("Limpiando catalogo de combustibles e inventario en microservice-inventarios...");
+            inventarioClient.limpiarTodoCombustibles();
+            log.info("Catalogo e inventario de combustibles limpiado");
+        } catch (Exception e) {
+            log.error("No se pudo limpiar el catalogo de combustibles: {}", e.getMessage());
+        }
+
         log.info("=== SISTEMA REINICIADO CORRECTAMENTE ===");
-        log.info("Se conservan: dispensarios, mangueras, combustibles y precios");
+        log.info("Se elimina todo: ventas, turnos, cortes, lecturas, dispensarios, mangueras");
     }
 
     private void resetearSecuencias() {
@@ -85,6 +113,9 @@ public class LimpiezaService {
             entityManager.createNativeQuery("ALTER TABLE cortes_turno_detallado AUTO_INCREMENT = 1").executeUpdate();
             entityManager.createNativeQuery("ALTER TABLE lecturas_iniciales_turno AUTO_INCREMENT = 1").executeUpdate();
             entityManager.createNativeQuery("ALTER TABLE lecturas_finales_turno AUTO_INCREMENT = 1").executeUpdate();
+            entityManager.createNativeQuery("ALTER TABLE mangueras AUTO_INCREMENT = 1").executeUpdate();
+            entityManager.createNativeQuery("ALTER TABLE caras_dispensario AUTO_INCREMENT = 1").executeUpdate();
+            entityManager.createNativeQuery("ALTER TABLE dispensarios AUTO_INCREMENT = 1").executeUpdate();
             log.info("Secuencias reseteadas correctamente");
         } catch (Exception e) {
             log.warn("No se pudieron resetear las secuencias: {}", e.getMessage());

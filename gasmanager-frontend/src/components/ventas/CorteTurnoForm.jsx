@@ -31,13 +31,27 @@ const CorteTurnoForm = () => {
     const [despachadores, setDespachadores] = useState([]);
     const [despachadorSeleccionado, setDespachadorSeleccionado] = useState('');
     const [cargandoDispensarios, setCargandoDispensarios] = useState(false);
+    const [combustibles, setCombustibles] = useState([]);
 
     useEffect(() => {
         cargarTurnosCerrados();
         cargarCortesRealizados();
         cargarClientesConCredito();
         cargarDespachadores();
+        cargarCombustibles();
     }, []);
+
+    const cargarCombustibles = async () => {
+        try {
+            const response = await fetch('/api/precios/combustibles');
+            if (response.ok) {
+                const data = await response.json();
+                setCombustibles(Array.isArray(data) ? data : []);
+            }
+        } catch (error) {
+            console.error('Error cargando combustibles:', error);
+        }
+    };
 
     const cargarDespachadores = async () => {
         try {
@@ -960,9 +974,10 @@ const CorteTurnoForm = () => {
                                                                     setNotasCredito(nuevasNotas);
                                                                 }}
                                                             >
-                                                                <option value="MAGNA">Magna</option>
-                                                                <option value="PREMIUM">Premium</option>
-                                                                <option value="DIESEL">Diesel</option>
+                                                                <option value="">❌ Seleccione un combustible</option>
+                                                                    {combustibles.map(c => (
+                                                                        <option key={c.id} value={c.tipo}>{c.nombre}</option>
+                                                                    ))}
                                                             </select>
                                                         </div>
 

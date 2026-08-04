@@ -18,6 +18,9 @@ public interface InventarioClient {
     @GetMapping("/api/combustibles/{id}")
     CombustibleDTO obtenerCombustible(@PathVariable("id") Long id);
 
+    @DeleteMapping("/api/combustibles/limpiar-todo")
+    void limpiarTodoCombustibles();
+
     @GetMapping("/api/combustibles/activos")
     List<CombustibleDTO> listarCombustiblesActivos();
 

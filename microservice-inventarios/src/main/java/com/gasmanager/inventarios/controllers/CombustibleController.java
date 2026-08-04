@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/combustibles")
@@ -69,6 +70,12 @@ public class CombustibleController {
     public ResponseEntity<Void> eliminarCombustible(@PathVariable Long id) {
         combustibleService.eliminarCombustible(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/limpiar-todo")
+    public ResponseEntity<Map<String, String>> limpiarTodo() {
+        combustibleService.limpiarTodo();
+        return ResponseEntity.ok(Map.of("mensaje", "Catálogo e inventario de combustibles limpiado"));
     }
 
     @PatchMapping("/{id}/toggle")

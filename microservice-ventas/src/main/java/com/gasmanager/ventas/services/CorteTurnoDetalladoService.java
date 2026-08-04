@@ -155,19 +155,12 @@ public class CorteTurnoDetalladoService {
     }
 
     private Map<String, BigDecimal> obtenerPreciosCombustibles() {
-        try {
-            List<InventarioClient.CombustibleDTO> combustibles = inventarioClient.listarCombustiblesActivos();
-            Map<String, BigDecimal> precios = new HashMap<>();
-            for (InventarioClient.CombustibleDTO c : combustibles) {
-                precios.put(c.getTipo(), c.getPrecioActual());
-            }
-            return precios;
-        } catch (Exception e) {
-            log.error("Error obteniendo precios: {}", e.getMessage());
-            return Map.of("MAGNA", new BigDecimal("24.00"),
-                    "PREMIUM", new BigDecimal("30.00"),
-                    "DIESEL", new BigDecimal("24.00"));
+        List<InventarioClient.CombustibleDTO> combustibles = inventarioClient.listarCombustiblesActivos();
+        Map<String, BigDecimal> precios = new HashMap<>();
+        for (InventarioClient.CombustibleDTO c : combustibles) {
+            precios.put(c.getTipo(), c.getPrecioActual());
         }
+        return precios;
     }
 
     // ========== OBTENER DISPENSARIOS DISPONIBLES PARA CORTE ==========

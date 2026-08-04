@@ -38,7 +38,11 @@ export const authService = {
     getCurrentUser: () => {
         const user = localStorage.getItem('user');
         return user ? JSON.parse(user) : null;
-    }
+    },
+    validarToken: async () => {
+        const response = await api.get('/usuarios/validar-token');
+        return response.data;
+    },
 };
 
 // Servicios de Usuarios

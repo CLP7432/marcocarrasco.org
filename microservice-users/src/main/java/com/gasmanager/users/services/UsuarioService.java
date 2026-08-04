@@ -98,6 +98,10 @@ public class UsuarioService {
                 usuarioExistente.setActivo(false);
             }
         }
+        if(usuarioActualizado.getPassword() != null && !usuarioActualizado.getPassword().isEmpty()){
+            usuarioExistente.setPassword(passwordEncoder.encode(usuarioActualizado.getPassword()));
+        }
+
         Usuario guardado = usuarioRepository.save(usuarioExistente);
 
         registrarAuditoriaCompleta(

@@ -30,4 +30,5 @@ public interface CombustibleService {
 
     CombustibleResponseDTO toggleActivo(Long id);
 
+    void limpiarTodo();
 }

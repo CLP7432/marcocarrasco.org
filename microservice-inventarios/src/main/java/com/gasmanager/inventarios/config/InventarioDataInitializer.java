@@ -13,7 +13,9 @@ public class InventarioDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        inventarioService.inicializarInventario();
-        System.out.println("=== INVENTARIO DE COMBUSTIBLE INICIALIZADO ===");
+        // Se removio la siembra automatica de tanques:
+        // la gasolinera se entrega en cero y los tanques se crean
+        // junto con el catalogo de combustibles desde el modulo.
+        System.out.println("=== INVENTARIO INICIADO SIN DATOS (entrega en cero) ===");
     }
 }

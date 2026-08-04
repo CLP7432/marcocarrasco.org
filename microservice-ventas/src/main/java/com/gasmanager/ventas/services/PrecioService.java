@@ -65,16 +65,17 @@ public class PrecioService {
     @Transactional(readOnly = true)
     public BigDecimal obtenerPrecioPorTipo(String tipo) {
         try {
-            return inventarioClient.obtenerPrecioActualPorTipo(tipo);
+            return inventarioClient.listarCombustibles().stream()
+                    .filter(c -> tipo.equalsIgnoreCase(c.getTipo()))
+                    .findFirst()
+                    .map(InventarioClient.CombustibleDTO::getPrecioActual)
+                    .orElseThrow(() -> new RuntimeException("No existe precio para el combustible: " + tipo));
+        } catch (RuntimeException e) {
+            log.error("Error obteniendo precio por tipo {}: {}", tipo, e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("Error obteniendo precio por tipo {}: {}", tipo, e.getMessage());
-            // Valores por defecto
-            switch (tipo.toUpperCase()) {
-                case "MAGNA": return new BigDecimal("24.00");
-                case "PREMIUM": return new BigDecimal("30.00");
-                case "DIESEL": return new BigDecimal("24.00");
-                default: return BigDecimal.ZERO;
-            }
+            throw new RuntimeException("No existe precio para el combustible: " + tipo, e);
         }
     }
 }

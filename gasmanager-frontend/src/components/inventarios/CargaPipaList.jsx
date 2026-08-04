@@ -1,16 +1,26 @@
 import React, {useState, useEffect} from 'react';
 import {useParams} from 'react-router-dom';
-import {inventarioCombustibleService} from '../../api/inventarios/auth';
+import {inventarioCombustibleService, combustibleService} from '../../api/inventarios/auth';
 
  const CargaPipaList = () => {
     const {tipo} = useParams();
     const [cargas, setCargas] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [combustibles, setCombustibles] = useState([]);
     const [tipoSeleccionado, setTipoSeleccionado] = useState(tipo || 'todos');
 
     useEffect(() => {
         cargarCargas();
     }, [tipoSeleccionado]);
+
+    useEffect(() => {
+        combustibleService.listarActivos()
+            .then(data => setCombustibles(Array.isArray(data) ? data : []))
+            .catch(err => {
+                console.error('Error cargando combustibles:', err);
+                setCombustibles([]);
+            });
+    }, []);
 
     const cargarCargas = async () => {
         setLoading(true);
@@ -45,9 +55,9 @@ import {inventarioCombustibleService} from '../../api/inventarios/auth';
                         style={{padding: '5px'}}
                     >
                         <option value="todos">Todos</option>
-                        <option value="MAGNA">Magna</option>
-                        <option value="PREMIUM">Premium</option>
-                        <option value="DIESEL">Diesel</option>
+                        {combustibles.map(c => (
+                            <option key={c.id} value={c.tipo}>{c.nombre}</option>
+                        ))}
                     </select>
                     <button onClick={cargarCargas} className="btn">Actualizar</button>
                 </div>

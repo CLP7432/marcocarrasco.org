@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { inventarioCombustibleService } from '../../api/inventarios/auth';
+import { inventarioCombustibleService, combustibleService } from '../../api/inventarios/auth';
 
 const CargaPipaForm = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [combustibles, setCombustibles] = useState([]);
     const [formData, setFormData] = useState({
-        tipoCombustible: 'MAGNA',
+        tipoCombustible: '',
         proveedor: '',
         volumen: '',
         precioCompra: '',
@@ -18,6 +19,18 @@ const CargaPipaForm = () => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
+
+    useEffect(() => {
+        // Los tipos de combustible salen del catalogo, no hardcodeados.
+        combustibleService.listarActivos()
+            .then(data => {
+                setCombustibles(Array.isArray(data) ? data : []);
+            })
+            .catch(err => {
+                console.error('Error cargando combustibles:', err);
+                setCombustibles([]);
+            });
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -55,9 +68,10 @@ const CargaPipaForm = () => {
                             onChange={handleChange}
                             required
                         >
-                            <option value="MAGNA">Magna</option>
-                            <option value="PREMIUM">Premium</option>
-                            <option value="DIESEL">Diesel</option>
+                            <option value="">❌ Seleccione un combustible</option>
+                            {combustibles.map(c => (
+                                <option key={c.id} value={c.tipo}>⛽ {c.nombre} ({c.tipo})</option>
+                            ))}
                         </select>
                     </div>
 

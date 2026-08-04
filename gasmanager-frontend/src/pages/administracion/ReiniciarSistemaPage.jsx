@@ -15,7 +15,7 @@ const ReiniciarSistemaPage = () => {
             return;
         }
 
-        if (!window.confirm('⚠️ ¿ESTÁ SEGURO? Esta acción eliminará TODAS las ventas, turnos y cortes. No se puede deshacer.')) {
+        if (!window.confirm('⚠️ ¿ESTÁ SEGURO? Esta acción eliminará TODOS los datos: ventas, turnos, cortes, dispensarios, mangueras, combustibles y tanques. La gasolinera quedará en cero. No se puede deshacer.')) {
             return;
         }
 
@@ -53,7 +53,9 @@ const ReiniciarSistemaPage = () => {
                         <li>Se eliminarán TODOS los <strong>turnos</strong></li>
                         <li>Se eliminarán TODOS los <strong>cortes</strong></li>
                         <li>Se eliminarán TODAS las <strong>lecturas iniciales y finales</strong></li>
-                        <li className="text-success">✅ Se conservarán: dispensarios, mangueras, combustibles y precios</li>
+                        <li>Se eliminarán TODOS los <strong>dispensarios y mangueras</strong></li>
+                        <li>Se eliminarán TODOS los <strong>combustibles y tanques</strong></li>
+                        <li className="text-danger">🚫 La gasolinera queda en CERO. Deberá reconfigurarse desde el inicio.</li>
                     </ul>
                 </div>
 

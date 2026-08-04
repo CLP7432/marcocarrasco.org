@@ -25,11 +25,11 @@ const DispensarioForm = () => {
 
     const [combustibles, setCombustibles] = useState([]);
 
+    // Los tipos de combustible salen del catalogo (no hardcodeados).
+    // Si no hay combustibles dados de alta, el select queda solo con "Seleccione".
     const opcionesCombustible = [
         { value: '', label: '❌ Seleccione un combustible' },
-        { value: 'MAGNA', label: '⛽ Magna' },
-        { value: 'PREMIUM', label: '🏁 Premium' },
-        { value: 'DIESEL', label: '🛢️ Diesel' }
+        ...combustibles.map(c => ({ value: c.tipo, label: `⛽ ${c.nombre} (${c.tipo})` }))
     ];
 
     useEffect(() => {

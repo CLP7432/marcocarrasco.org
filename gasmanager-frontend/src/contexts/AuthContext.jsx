@@ -16,12 +16,31 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // useEffect(() => {
+    //     const currentUser = authService.getCurrentUser();
+    //     if (currentUser) {
+    //         setUser(currentUser);
+    //     }
+    //     setLoading(false);
+    // }, []);
     useEffect(() => {
         const currentUser = authService.getCurrentUser();
         if (currentUser) {
-            setUser(currentUser);
+            authService.validarToken()
+                .then(esValido => {
+                    if (esValido) {
+                        setUser(currentUser);
+                    } else {
+                        authService.logout();
+                    }
+                })
+                .catch(() => {
+                    authService.logout();
+                })
+                .finally(() => setLoading(false));
+        } else {
+            setLoading(false);
         }
-        setLoading(false);
     }, []);
 
     const login = async (correo, password) => {

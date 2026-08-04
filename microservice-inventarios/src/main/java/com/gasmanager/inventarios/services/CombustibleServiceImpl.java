@@ -5,9 +5,12 @@ import com.gasmanager.inventarios.dto.CombustibleResponseDTO;
 import com.gasmanager.inventarios.dto.PrecioUpdateDTO;
 import com.gasmanager.inventarios.entities.Combustible;
 import com.gasmanager.inventarios.entities.PrecioHistorico;
+import com.gasmanager.inventarios.enums.TipoCombustible;
 import com.gasmanager.inventarios.exceptions.ResourceNotFoundException;
 import com.gasmanager.inventarios.exceptions.ValidationException;
+import com.gasmanager.inventarios.entities.InventarioCombustible;
 import com.gasmanager.inventarios.repositories.CombustibleRepository;
+import com.gasmanager.inventarios.repositories.InventarioCombustibleRepository;
 import com.gasmanager.inventarios.repositories.PrecioHistoricoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,8 @@ public class CombustibleServiceImpl implements CombustibleService {
     private CombustibleRepository combustibleRepository;
     @Autowired
     private PrecioHistoricoRepository precioHistoricoRepository;
+    @Autowired
+    private InventarioCombustibleRepository inventarioCombustibleRepository;
 
     public CombustibleServiceImpl (CombustibleRepository combustibleRepository) {
         this.combustibleRepository = combustibleRepository;
@@ -53,6 +58,20 @@ public class CombustibleServiceImpl implements CombustibleService {
         combustible.setUpdatedBy(usuarioNombre);
 
         combustible = combustibleRepository.save(combustible);
+
+        // Si no existe inventario (tanque) para este tipo, se crea en cero.
+        // Asi la gasolinera se entrega sin datos y el tanque nace junto al catalogo.
+        if (!inventarioCombustibleRepository.findByTipoCombustible(request.getTipo()).isPresent()) {
+            InventarioCombustible tanque = new InventarioCombustible(
+                    request.getTipo(),
+                    request.getNombre(),
+                    new BigDecimal("0"));
+            tanque.setStockActual(BigDecimal.ZERO);
+            tanque.setStockMinimo(new BigDecimal("0"));
+            tanque.setActivo(true);
+            inventarioCombustibleRepository.save(tanque);
+        }
+
         return mapToResDTO(combustible);
     }
 
@@ -151,6 +170,16 @@ public class CombustibleServiceImpl implements CombustibleService {
 
         return mapToResDTO(combustible);
     }
+
+    @Override
+    @Transactional
+    public void limpiarTodo() {
+        precioHistoricoRepository.deleteAll();
+        inventarioCombustibleRepository.deleteAll();
+        combustibleRepository.deleteAll();
+    }
+
+
 
     private CombustibleResponseDTO mapToResDTO(Combustible combustible) {
 
