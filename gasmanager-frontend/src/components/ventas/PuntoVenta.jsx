@@ -72,14 +72,6 @@ const PuntoVenta = () => {
                 const data = await response.json();
                 setDespachadores(data);
                 console.log('Despachadores cargados:', data);
-
-                const saved = localStorage.getItem('despachadoresPorIsla');
-                if (saved) {
-                    try {
-                        const parsed = JSON.parse(saved);
-                        setDespachadorPorIsla(parsed);
-                    } catch (e) {}
-                }
             }
         } catch (error) {
             console.error('Error cargando despachadores:', error);
@@ -349,31 +341,20 @@ const PuntoVenta = () => {
             setDispensarios(dispensariosArray);
             setMangueras(todasLasMangueras);
 
-            // El despachador asignado a cada isla NACE del backend (fuente de verdad).
-            // Si el despachador viene persistido, lo aplicamos; si no, queda pendiente.
+            // El despachador asignado a cada isla NACE del backend (fuente de verdad unica).
+            // NO se usa localStorage: si la BD no tiene despachador, la isla queda sin asignar.
             const mapaInicial = {};
-            const saved = localStorage.getItem('despachadoresPorIsla');
-            const savedMap = saved ? (() => { try { return JSON.parse(saved); } catch(e) { return {}; } })() : {};
             dispensariosArray.forEach(disp => {
                 if (disp.despachadorId) {
                     const d = despachadores.find(x => x.id === disp.despachadorId);
                     if (d) {
                         mapaInicial[disp.id] = d;
                     } else {
-                        mapaInicial[disp.id] = { id: disp.despachadorId, nombre: '', apellidoPaterno: '' };
+                        mapaInicial[disp.id] = { id: disp.despachadorId, nombre: disp.despachadorNombre || '', apellidoPaterno: '' };
                     }
                 }
             });
-            // Si habia una asignacion local mas reciente que no esta en BD, la preservamos solo si la BD no manda nada
-            setDespachadorPorIsla(prevDespachadorPorIsla => {
-                const combinado = { ...mapaInicial };
-                Object.keys(prevDespachadorPorIsla || {}).forEach(dispId => {
-                    if (!combinado[dispId] && savedMap[dispId]) {
-                        combinado[dispId] = savedMap[dispId];
-                    }
-                });
-                return combinado;
-            });
+            setDespachadorPorIsla(mapaInicial);
 
             console.log('🏗️ Dispensarios procesados:', dispensariosArray.length);
             console.log('📊 Total mangueras:', todasLasMangueras.length);
@@ -489,7 +470,6 @@ const PuntoVenta = () => {
         if (despachador) {
             const nuevos = { ...despachadorPorIsla, [dispensarioId]: despachador };
             setDespachadorPorIsla(nuevos);
-            localStorage.setItem('despachadoresPorIsla', JSON.stringify(nuevos));
             console.log('Despachador asignado a isla:', despachador);
 
             // Persistir en el backend (referencia de cortes de turno por despachador)
@@ -742,6 +722,21 @@ const PuntoVenta = () => {
                     </div>
                 </div>
             </div>
+
+            {/* ===== AVISO: NO HAY DESPACHADORES ACTIVOS ===== */}
+            {despachadores.filter(d => d.activo === true).length === 0 && (
+                <div className="alert alert-danger shadow-sm rounded-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <strong>⛔ No existen despachadores activos.</strong>
+                        <br />
+                        <span>Para poder despachar, primero debes dar de alta al menos un despachador en Nómina
+                        (empleado con puesto <em>"Despachador"</em>).</span>
+                    </div>
+                    <a href="/empleados/nuevo" className="btn btn-dark">
+                        ➕ Dar de alta despachador
+                    </a>
+                </div>
+            )}
 
             {/* ===== CARGA EN CURSO DESDE SIMULADOR ===== */}
             {cargaActiva && cargaActiva.estado === 'EN_CURSO' && (
