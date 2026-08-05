@@ -347,11 +347,11 @@ const PuntoVenta = () => {
             dispensariosArray.forEach(disp => {
                 if (disp.despachadorId) {
                     const d = despachadores.find(x => x.id === disp.despachadorId);
-                    if (d) {
+                    // Solo se considera un despachador valido si el empleado sigue existiendo y activo.
+                    if (d && d.activo === true) {
                         mapaInicial[disp.id] = d;
-                    } else {
-                        mapaInicial[disp.id] = { id: disp.despachadorId, nombre: disp.despachadorNombre || '', apellidoPaterno: '' };
                     }
+                    // Si el empleado ya no existe/inactivo, la isla queda SIN despachador (bloquea vender).
                 }
             });
             setDespachadorPorIsla(mapaInicial);

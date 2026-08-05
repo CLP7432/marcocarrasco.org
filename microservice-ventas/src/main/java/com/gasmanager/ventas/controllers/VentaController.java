@@ -79,6 +79,8 @@ public class VentaController {
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevaVenta);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

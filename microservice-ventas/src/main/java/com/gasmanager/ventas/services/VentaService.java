@@ -3,10 +3,12 @@ package com.gasmanager.ventas.services;
 import com.gasmanager.ventas.clients.InventarioClient;
 import com.gasmanager.ventas.dto.EstadisticasVentasDTO;
 import com.gasmanager.ventas.entities.core.DetalleVenta;
+import com.gasmanager.ventas.entities.core.Dispensario;
 import com.gasmanager.ventas.entities.core.Turno;
 import com.gasmanager.ventas.entities.core.Venta;
 import com.gasmanager.ventas.enums.EstadoTurno;
 import com.gasmanager.ventas.enums.EstadoVenta;
+import com.gasmanager.ventas.repositories.DispensarioRepository;
 import com.gasmanager.ventas.repositories.TurnoRepository;
 import com.gasmanager.ventas.repositories.VentaRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class VentaService {
     private final VentaRepository ventaRepository;
     private final TurnoRepository turnoRepository;
     private final InventarioClient inventarioClient;
+    private final DispensarioRepository dispensarioRepository;
 
     public Venta crearVenta(Venta venta) {
         Turno turnoAsignado = null;
@@ -59,6 +62,26 @@ public class VentaService {
 
         if (venta.getTurno() == null) {
             throw new IllegalStateException("No se pudo asignar un turno a la venta");
+        }
+
+        // ===== REGLA DE NEGOCIO: no se puede vender de un dispensario sin despachador asignado =====
+        if (venta.getDispensarioId() != null) {
+            Dispensario dispensario = dispensarioRepository
+                    .findById(venta.getDispensarioId().longValue())
+                    .orElse(null);
+            if (dispensario != null) {
+                if (dispensario.getDespachadorId() == null) {
+                    throw new IllegalStateException(
+                            "El dispensario \"" + dispensario.getNombre() + "\" no tiene despachador asignado. " +
+                            "Asigne un despachador antes de poder vender.");
+                }
+                if (venta.getDespachadorId() == null) {
+                    throw new IllegalStateException(
+                            "La venta no indica despachador. El dispensario \"" + dispensario.getNombre() +
+                            "\" es atendido por " + (dispensario.getDespachadorNombre() != null
+                            ? dispensario.getDespachadorNombre() : "un despachador") + ".");
+                }
+            }
         }
 
         if (venta.getFolio() != null && ventaRepository.findByFolio(venta.getFolio()).isPresent()) {
